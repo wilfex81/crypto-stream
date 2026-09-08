@@ -15,7 +15,7 @@ consumer = KafkaConsumer(
 
 
 if __name__ == "__main__":
-    print("Listening on Hello-Topics...")
+    print("Listening on Hello-Topic...")
     for message in consumer:
         print(
             f"partition={message.partition} offset={message.offset} "
