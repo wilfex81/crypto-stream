@@ -13,3 +13,7 @@ output "consumer_secret_access_key" {
   value       = aws_iam_access_key.consumer.secret
   sensitive   = true
 }
+
+output "role_arn" {
+  value = module.aws_iam_databricks.role_arn
+}

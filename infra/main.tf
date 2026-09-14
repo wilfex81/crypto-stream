@@ -8,6 +8,18 @@ terraform {
   }
 }
 
+module "aws_iam_databricks" {
+  source = "./modules/aws_iam_databricks"
+
+  bucket_arn                        = aws_s3_bucket.lake.arn
+  databricks_cross_account_role_arn = var.databricks_cross_account_role_arn
+  external_id                       = var.external_id
+
+  tags = {
+    Project = "crypto-stream-lakehouse"
+  }
+}
+
 provider "aws" {
   region = var.aws_region
 }
