@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: stg_trades
-    description: Deduplicated, type-conformed trade events. Grain: one row per trade per symbol.
+    description: Deduplicated, type-conformed trade events. Grain one row per trade per symbol.
     columns:
       - name: trade_id
         description: Binance's trade ID, unique per symbol.
