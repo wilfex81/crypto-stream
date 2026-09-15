@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: bronze
+    database: crypto_streaming
+    schema: bronze
+    tables:
+      - name: trades
+        description: Raw trade events from Binance, one row per trade per symbol, as ingested by Auto Loader.
