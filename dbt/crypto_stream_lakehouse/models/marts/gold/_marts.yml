@@ -1,0 +1,52 @@
+version: 2
+
+seeds:
+  - name: dim_symbol
+    description: Static dimension of tracked trading pairs. Low cardinality (3 rows currently).
+    columns:
+      - name: symbol
+        tests:
+          - unique
+          - not_null
+
+models:
+  - name: fct_trade
+    description: >
+      Trade-grain fact table. One row per trade per symbol, partitioned
+      by trade_date. Incremental — each run only adds trades newer than
+      what's already loaded.
+    columns:
+      - name: symbol
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_symbol')
+                field: symbol
+      - name: trade_id
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - symbol
+              - trade_id
+
+  - name: fct_ohlc_1m
+    description: >
+      Rolling 1-minute OHLC/VWAP candles per symbol. Different grain
+      from fct_trade — one row per symbol per minute, not per trade.
+    columns:
+      - name: symbol
+        tests:
+          - not_null
+      - name: window_start
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - symbol
+              - window_start

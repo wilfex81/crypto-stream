@@ -12,9 +12,6 @@ clean-targets:
 
 models:
   crypto_stream_lakehouse:
-    bronze:
-      +materialized: table
-      +schema: bronze
     staging:
       +materialized: view
       +schema: silver
