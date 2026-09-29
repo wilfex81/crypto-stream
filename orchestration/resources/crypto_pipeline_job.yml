@@ -21,6 +21,7 @@ resources:
             dependencies:
               - "databricks-sql-connector"
               - "snowflake-connector-python[pandas]"
+              - "python-dotenv"
 
       tasks:
         - task_key: ingest_bronze

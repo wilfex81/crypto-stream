@@ -20,8 +20,8 @@ from datetime import datetime, timezone
 load_dotenv()
 
  
-SNOWFLAKE_DATABASE = os.getenv("SNOWFLAKE_DATABASE")
-SNOWFLAKE_SCHEMA = os.getenv("SNOWFLAKE_SCHEMA")
+SNOWFLAKE_DATABASE = "CRYPTO_STREAMING"
+SNOWFLAKE_SCHEMA = "GOLD"
 
 CREDENTIAL_ORDER = [
     "snowflake_account",
@@ -171,8 +171,9 @@ def load_table(db_conn, sf_conn, target_table: str, config: dict):
  
  
 def main():
-    db_conn = get_databricks_connection()
-    sf_conn = get_snowflake_connection()
+    creds = get_credentials()
+    db_conn = get_databricks_connection(creds)
+    sf_conn = get_snowflake_connection(creds)
  
     try:
         for target_table, config in TABLES.items():
