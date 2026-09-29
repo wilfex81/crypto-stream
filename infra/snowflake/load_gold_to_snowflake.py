@@ -1,5 +1,5 @@
 """
-Reads gold tables from Databricks Unity Catalog and 
+Reads gold and silver tables from Databricks Unity Catalog and 
 loads them into Snowflake
 
 """
