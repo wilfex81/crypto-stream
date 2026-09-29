@@ -1,3 +1,4 @@
+# Databricks notebook source
 # Databricks notebook: Auto Loader ingestion into bronze
 #
 # Reads newly-arrived JSON files from the S3 lake landing zone and

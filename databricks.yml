@@ -1,0 +1,17 @@
+bundle:
+  name: crypto-stream-lakehouse
+
+include:
+  - orchestration/resources/*.yml
+
+targets:
+  dev:
+    default: true
+
+variables:
+  sql_warehouse_id:
+    description: SQL warehouse ID used by the dbt task (from warehouse connection details)
+    #value: ""  # Replace with your actual SQL warehouse ID
+  secret_scope:
+    description: Databricks secret scope holding Snowflake credentials
+    default: crypto-stream

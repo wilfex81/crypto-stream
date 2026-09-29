@@ -1,0 +1,61 @@
+resources:
+  jobs:
+    crypto_pipeline:
+      name: crypto-stream-pipeline
+
+      schedule:
+        quartz_cron_expression: "0 */5 * * * ?"   # every 5 minutes
+        timezone_id: "Africa/Nairobi"
+        pause_status: "PAUSED"
+
+      environments:
+        - environment_key: dbt_env
+          spec:
+            client: "2"
+            dependencies:
+              - "dbt-databricks"
+              
+        - environment_key: snowflake_load_env
+          spec:
+            client: "2"
+            dependencies:
+              - "databricks-sql-connector"
+              - "snowflake-connector-python[pandas]"
+
+      tasks:
+        - task_key: ingest_bronze
+          notebook_task:
+            notebook_path: "../../notebooks/autoloader_bronze.py"
+
+        - task_key: dbt_transform
+          depends_on:
+            - task_key: ingest_bronze
+          environment_key: dbt_env
+          dbt_task:
+            project_directory: "../../dbt/crypto_stream_lakehouse"
+            commands:
+              - "dbt deps"
+              - "dbt seed"
+              - "dbt run"
+              - "dbt test"
+            warehouse_id: "${var.sql_warehouse_id}"
+            catalog: "crypto_streaming"
+
+        - task_key: load_snowflake
+          depends_on:
+            - task_key: dbt_transform
+          environment_key: snowflake_load_env
+          spark_python_task:
+            python_file: "../../warehouse/load_gold_to_snowflake.py"
+            parameters:
+              - "{{secrets/crypto-stream/snowflake_account}}"
+              - "{{secrets/crypto-stream/snowflake_user}}"
+              - "{{secrets/crypto-stream/snowflake_password}}"
+              - "{{secrets/crypto-stream/snowflake_role}}"
+              - "{{secrets/crypto-stream/databricks_host}}"
+              - "{{secrets/crypto-stream/databricks_http_path}}"
+              - "{{secrets/crypto-stream/databricks_token}}"
+
+      email_notifications:
+        on_failure:
+          - wilfex81@gmail.com

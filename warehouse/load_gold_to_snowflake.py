@@ -5,6 +5,7 @@ loads them into Snowflake
 """
 
 import os
+import sys
  
 import pandas as pd
 import snowflake.connector
@@ -21,6 +22,34 @@ load_dotenv()
  
 SNOWFLAKE_DATABASE = os.getenv("SNOWFLAKE_DATABASE")
 SNOWFLAKE_SCHEMA = os.getenv("SNOWFLAKE_SCHEMA")
+
+CREDENTIAL_ORDER = [
+    "snowflake_account",
+    "snowflake_user",
+    "snowflake_password",
+    "snowflake_role",
+    "databricks_host",
+    "databricks_http_path",
+    "databricks_token",
+]
+
+def get_credentials() -> dict:
+    """
+    Positional CLI args (serverless job) take priority; falls back
+    to env vars so this still runs locally without any job wrapper.
+    """
+    if len(sys.argv) - 1 >= len(CREDENTIAL_ORDER):
+        return dict(zip(CREDENTIAL_ORDER, sys.argv[1:]))
+ 
+    return {
+        "snowflake_account": os.environ["SNOWFLAKE_ACCOUNT"],
+        "snowflake_user": os.environ["SNOWFLAKE_USER"],
+        "snowflake_password": os.environ["SNOWFLAKE_PASSWORD"],
+        "snowflake_role": os.environ["SNOWFLAKE_ROLE"],
+        "databricks_host": os.environ["DATABRICKS_HOST"],
+        "databricks_http_path": os.environ["DATABRICKS_HTTP_PATH"],
+        "databricks_token": os.environ["DATABRICKS_TOKEN"],
+    }
  
 # Per-table load config. dim_symbol is small and static: full refresh
 # every run. The fact tables are incremental, same idea as the dbt
@@ -43,20 +72,20 @@ TABLES = {
 }
  
  
-def get_databricks_connection():
+def get_databricks_connection(creds: dict):
     return sql.connect(
-        server_hostname=os.environ["DATABRICKS_HOST"],
-        http_path=os.environ["DATABRICKS_HTTP_PATH"],
-        access_token=os.environ["DATABRICKS_TOKEN"],
+        server_hostname=creds["databricks_host"],
+        http_path=creds["databricks_http_path"],
+        access_token=creds["databricks_token"],
     )
  
  
-def get_snowflake_connection():
+def get_snowflake_connection(creds: dict):
     return snowflake.connector.connect(
-        account=os.environ["SNOWFLAKE_ACCOUNT"],
-        user=os.environ["SNOWFLAKE_USER"],
-        password=os.environ["SNOWFLAKE_PASSWORD"],
-        role=os.environ["SNOWFLAKE_ROLE"],
+        account=creds["snowflake_account"],
+        user=creds["snowflake_user"],
+        password=creds["snowflake_password"],
+        role=creds["snowflake_role"],
         database=SNOWFLAKE_DATABASE,
         schema=SNOWFLAKE_SCHEMA,
     )
