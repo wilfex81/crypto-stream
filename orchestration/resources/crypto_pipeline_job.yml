@@ -48,14 +48,6 @@ resources:
           environment_key: snowflake_load_env
           spark_python_task:
             python_file: "../../warehouse/load_gold_to_snowflake.py"
-            parameters:
-              - "{{secrets/crypto-stream/snowflake_account}}"
-              - "{{secrets/crypto-stream/snowflake_user}}"
-              - "{{secrets/crypto-stream/snowflake_password}}"
-              - "{{secrets/crypto-stream/snowflake_role}}"
-              - "{{secrets/crypto-stream/databricks_host}}"
-              - "{{secrets/crypto-stream/databricks_http_path}}"
-              - "{{secrets/crypto-stream/databricks_token}}"
 
       email_notifications:
         on_failure:

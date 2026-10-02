@@ -9,8 +9,7 @@ import sys
  
 import pandas as pd
 import snowflake.connector
-from pyspark.sql import SparkSession
-from pyspark.dbutils import DBUtils
+from databricks import sql
 from snowflake.connector.pandas_tools import write_pandas
 
 
@@ -29,30 +28,28 @@ CREDENTIAL_ORDER = [
     "snowflake_user",
     "snowflake_password",
     "snowflake_role",
+    "databricks_host",
+    "databricks_http_path",
+    "databricks_token",
 ]
 
-
 def get_credentials() -> dict:
-     """
-     Reads Snowflake credentials from Databricks secrets when running
-     on the platform; falls back to env vars for local development.
-     """
-     try:
-         spark = SparkSession.builder.getOrCreate()
-         dbutils = DBUtils(spark)
-         return {
-             "snowflake_account": dbutils.secrets.get(scope="crypto-stream", key="snowflake_account"),
-             "snowflake_user": dbutils.secrets.get(scope="crypto-stream", key="snowflake_user"),
-             "snowflake_password": dbutils.secrets.get(scope="crypto-stream", key="snowflake_password"),
-             "snowflake_role": dbutils.secrets.get(scope="crypto-stream", key="snowflake_role"),
-         }
-     except Exception:
-         return {
-             "snowflake_account": os.environ["SNOWFLAKE_ACCOUNT"],
-             "snowflake_user": os.environ["SNOWFLAKE_USER"],
-             "snowflake_password": os.environ["SNOWFLAKE_PASSWORD"],
-             "snowflake_role": os.environ["SNOWFLAKE_ROLE"],
-         }
+    """
+    Positional CLI args (serverless job) take priority; falls back
+    to env vars so this still runs locally without any job wrapper.
+    """
+    if len(sys.argv) - 1 >= len(CREDENTIAL_ORDER):
+        return dict(zip(CREDENTIAL_ORDER, sys.argv[1:]))
+ 
+    return {
+        "snowflake_account": os.environ["SNOWFLAKE_ACCOUNT"],
+        "snowflake_user": os.environ["SNOWFLAKE_USER"],
+        "snowflake_password": os.environ["SNOWFLAKE_PASSWORD"],
+        "snowflake_role": os.environ["SNOWFLAKE_ROLE"],
+        "databricks_host": os.environ["DATABRICKS_HOST"],
+        "databricks_http_path": os.environ["DATABRICKS_HTTP_PATH"],
+        "databricks_token": os.environ["DATABRICKS_TOKEN"],
+    }
  
 # Per-table load config. dim_symbol is small and static: full refresh
 # every run. The fact tables are incremental, same idea as the dbt
@@ -73,6 +70,14 @@ TABLES = {
         "watermark_column": "window_start",
     },
 }
+ 
+ 
+def get_databricks_connection(creds: dict):
+    return sql.connect(
+        server_hostname=creds["databricks_host"],
+        http_path=creds["databricks_http_path"],
+        access_token=creds["databricks_token"],
+    )
  
  
 def get_snowflake_connection(creds: dict):
@@ -167,13 +172,14 @@ def load_table(db_conn, sf_conn, target_table: str, config: dict):
  
 def main():
     creds = get_credentials()
-    spark = SparkSession.builder.getOrCreate()
+    db_conn = get_databricks_connection(creds)
     sf_conn = get_snowflake_connection(creds)
  
     try:
         for target_table, config in TABLES.items():
-            load_table(spark, sf_conn, target_table, config)
+            load_table(db_conn, sf_conn, target_table, config)
     finally:
+        db_conn.close()
         sf_conn.close()
  
  
