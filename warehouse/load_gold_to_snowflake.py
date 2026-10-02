@@ -115,15 +115,9 @@ def get_watermark(sf_conn, target_table: str, watermark_column: str):
  
  
 def fetch_dataframe(db_conn, query: str, params: dict = None) -> pd.DataFrame:
-    cur = db_conn.cursor()
-    if params:
-        cur.execute(query, params)
-    else:
-        cur.execute(query)
-    columns = [desc[0] for desc in cur.description]
-    rows = cur.fetchall()
-    cur.close()
-    return pd.DataFrame(rows, columns=columns)
+   if params:
+       return db_conn.sql(query, args=params).toPandas()
+   return db_conn.sql(query).toPandas()
  
  
 def load_table(db_conn, sf_conn, target_table: str, config: dict):
@@ -145,7 +139,7 @@ def load_table(db_conn, sf_conn, target_table: str, config: dict):
             # TIMESTAMP column.
             query = (
                 f"SELECT * FROM {source} "
-                f"WHERE {watermark_col} > CAST(%(watermark)s AS TIMESTAMP)"
+                f"WHERE {watermark_col} > CAST(:watermark AS TIMESTAMP)"
             )
             df = fetch_dataframe(db_conn, query, {"watermark": watermark_to_iso(watermark)})
     df.columns = [c.upper() for c in df.columns]  # Snowflake convention
