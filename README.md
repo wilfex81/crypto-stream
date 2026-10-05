@@ -1,3 +1,5 @@
+![Crypto Stream dashboard](docs/static/Dashboard.png)
+
 # crypto-stream
 
 Real-time crypto trade data pipeline: Binance WebSocket → Kafka → S3 (lake) → Databricks Unity Catalog (lakehouse transforms) → Snowflake (warehouse) → dashboard.
