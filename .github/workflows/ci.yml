@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint producer, consumer, warehouse scripts
+        run: ruff check producer/ consumer/ warehouse/
+
+  dbt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt
+        run: pip install dbt-databricks
+
+      - name: Generate dbt profile
+        working-directory: dbt/crypto_stream_lakehouse
+        run: |
+          cat > profiles.yml << 'EOF'
+          crypto_stream_lakehouse:
+            target: dev
+            outputs:
+              dev:
+                type: databricks
+                catalog: crypto_streaming
+                schema: silver
+                host: "{{ env_var('DATABRICKS_HOST') }}"
+                http_path: "{{ env_var('DATABRICKS_HTTP_PATH') }}"
+                token: "{{ env_var('DATABRICKS_TOKEN') }}"
+                threads: 4
+          EOF
+
+      - name: Install dbt packages
+        working-directory: dbt/crypto_stream_lakehouse
+        run: dbt deps
+        env:
+          DBT_PROFILES_DIR: .
+
+      - name: dbt seed
+        working-directory: dbt/crypto_stream_lakehouse
+        run: dbt seed
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DBT_PROFILES_DIR: .
+
+      - name: dbt run
+        working-directory: dbt/crypto_stream_lakehouse
+        run: dbt run
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DBT_PROFILES_DIR: .
+
+      - name: dbt test
+        working-directory: dbt/crypto_stream_lakehouse
+        run: dbt test
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          DBT_PROFILES_DIR: .
