@@ -37,9 +37,9 @@ jobs:
         run: |
           cat > profiles.yml << 'EOF'
           crypto_stream_lakehouse:
-            target: dev
+            target: ci
             outputs:
-              dev:
+              ci:
                 type: databricks
                 catalog: crypto_streaming
                 schema: silver
@@ -57,7 +57,7 @@ jobs:
 
       - name: dbt seed
         working-directory: dbt/crypto_stream_lakehouse
-        run: dbt seed
+        run: dbt seed --target ci
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
@@ -66,7 +66,7 @@ jobs:
 
       - name: dbt run
         working-directory: dbt/crypto_stream_lakehouse
-        run: dbt run
+        run: dbt run --target ci
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
@@ -75,7 +75,7 @@ jobs:
 
       - name: dbt test
         working-directory: dbt/crypto_stream_lakehouse
-        run: dbt test
+        run: dbt test --target ci
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_HTTP_PATH: ${{ secrets.DATABRICKS_HTTP_PATH }}
