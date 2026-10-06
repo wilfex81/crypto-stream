@@ -2,6 +2,7 @@ import asyncio
 import json
 
 import websockets
+
 from kafka import KafkaProducer
 
 SYMBOLS = ["btcusdt", "ethusdt", "solusdt"]  # List of symbols to subscribe to
@@ -57,7 +58,7 @@ async def consume():
         except websockets.ConnectionClosed as e:
             print(f"Connection closed ({e}). Reconnecting in 3s...")
             await asyncio.sleep(3)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - reconnect after unexpected stream errors
             print(f"Unexpected error: {e}. Reconnecting in 3s...")
             await asyncio.sleep(3)
 

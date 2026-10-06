@@ -1,14 +1,13 @@
 import json
+import os
 import time
 from datetime import datetime, timezone
 from io import BytesIO
 
 import boto3
-from kafka import KafkaConsumer
-
-import os
 from dotenv import load_dotenv
 
+from kafka import KafkaConsumer
 
 load_dotenv()
 

@@ -5,18 +5,14 @@ loads them into Snowflake
 """
 
 import os
-import sys
- 
-import pandas as pd
-import snowflake.connector
-from pyspark.sql import SparkSession
-from pyspark.dbutils import DBUtils
-from snowflake.connector.pandas_tools import write_pandas
-
-
-from dotenv import load_dotenv
 from datetime import datetime, timezone
 
+import pandas as pd
+import snowflake.connector
+from dotenv import load_dotenv
+from pyspark.dbutils import DBUtils
+from pyspark.sql import SparkSession
+from snowflake.connector.pandas_tools import write_pandas
 
 load_dotenv()
 
@@ -46,7 +42,7 @@ def get_credentials() -> dict:
              "snowflake_password": dbutils.secrets.get(scope="crypto-stream", key="snowflake_password"),
              "snowflake_role": dbutils.secrets.get(scope="crypto-stream", key="snowflake_role"),
          }
-     except Exception:
+     except Exception:  # noqa: BLE001 - fall back to local environment outside Databricks
          return {
              "snowflake_account": os.environ["SNOWFLAKE_ACCOUNT"],
              "snowflake_user": os.environ["SNOWFLAKE_USER"],
@@ -114,7 +110,7 @@ def get_watermark(sf_conn, target_table: str, watermark_column: str):
         cur.close()
  
  
-def fetch_dataframe(db_conn, query: str, params: dict = None) -> pd.DataFrame:
+def fetch_dataframe(db_conn, query: str, params: dict | None = None) -> pd.DataFrame:
    if params:
        return db_conn.sql(query, args=params).toPandas()
    return db_conn.sql(query).toPandas()

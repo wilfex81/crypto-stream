@@ -6,16 +6,13 @@ loads them into Snowflake
 
 import os
 import sys
- 
+from datetime import datetime, timezone
+
 import pandas as pd
 import snowflake.connector
 from databricks import sql
-from snowflake.connector.pandas_tools import write_pandas
-
-
 from dotenv import load_dotenv
-from datetime import datetime, timezone
-
+from snowflake.connector.pandas_tools import write_pandas
 
 load_dotenv()
 
@@ -119,7 +116,7 @@ def get_watermark(sf_conn, target_table: str, watermark_column: str):
         cur.close()
  
  
-def fetch_dataframe(db_conn, query: str, params: dict = None) -> pd.DataFrame:
+def fetch_dataframe(db_conn, query: str, params: dict | None = None) -> pd.DataFrame:
     cur = db_conn.cursor()
     if params:
         cur.execute(query, params)
