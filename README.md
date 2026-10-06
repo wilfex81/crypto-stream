@@ -74,7 +74,8 @@ docker-compose.yml  Local Kafka for development
 
 ## Status
 
-Early build. See project checklist for current phase.
+Early build. See project checklist for current phase. 
+Added to fire up CI
 
 ## Note on data
 
