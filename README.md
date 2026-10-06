@@ -1,4 +1,5 @@
-![Crypto Stream dashboard](docs/static/Dashboard.png)
+![Architecture](docs/static/architecture.svg)
+<!-- ![Crypto Stream dashboard](docs/static/Dashboard.png) -->
 
 # crypto-stream
 
